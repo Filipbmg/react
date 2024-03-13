@@ -88,17 +88,8 @@ const DetailPage = ({ navigation, route }) => {
         }
     }
 
-    async function uploadImage() {
-        const res = await fetch(imagePath)
-        const blob = await res.blob()
-        const storageRef = ref(storage, "myimage.jpg")
-        uploadBytes(storageRef, blob).then((snapshot) => {
-            alert("Image uploaded")
-        })
-    }
-
     async function downloadImage() {
-        getDownloadURL(ref(storage, "myimage.jpg"))
+        getDownloadURL(ref(storage, `${note.id}.jpg`))
             .then((url) => {
                 setImagePath(url)
         }).catch((error) => {
@@ -106,15 +97,41 @@ const DetailPage = ({ navigation, route }) => {
         })
     }
 
+    async function uploadImage() {
+        const res = await fetch(imagePath)
+        const blob = await res.blob()
+        const storageRef = ref(storage, `${note.id}.jpg`)
+        uploadBytes(storageRef, blob).then((snapshot) => {
+            alert("Saved")
+        })
+    }
+
+    async function launchCamera() {
+        const result = await ImagePicker.requestCameraPermissionsAsync()
+        if(result.granted === false) {
+            alert("Kamera tilladelse afvist")
+        } else {
+            ImagePicker.launchCameraAsync()
+                .then((response) => {
+                    if(!response.canceled) {
+                        setImagePath(response.assets[0].uri)
+                    }
+                    }).catch((error) => {
+                        alert("Fejl i kamera " + error)
+            })
+        }
+    }
+
     return (
         <View style={styles.container}>
+            <Image style={{width: 200, height: 200}} source={{uri:imagePath}}/>
             <Text>
                 {note.text}
             </Text>
-            <Image style={{width: 200, height: 200}} source={{uri:imagePath}}/>
             <Button title='Download Image' onPress={downloadImage}/>
             <Button title='Pick Image' onPress={launchImagePicker}/>
-            <Button title='Upload Image' onPress={uploadImage}/>
+            <Button title='Camera' onPress={launchCamera}/>
+            <Button title='Save' onPress={uploadImage}/>
         </View>
     );
 }
